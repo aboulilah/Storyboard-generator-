@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Storyboard Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #1D9E75;
+    --green-dark: #0F6E56;
+    --green-light: #E1F5EE;
+    --green-mid: #9FE1CB;
+    --text: #1a1a1a;
+    --text-muted: #6b7280;
+    --text-hint: #9ca3af;
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --border-light: rgba(0,0,0,0.06);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-pill: 100px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(250,250,249,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-light);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-logo span {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--green); display: flex; align-items: center; justify-content: center;
+  }
+  .nav-logo span svg { width: 16px; height: 16px; fill: white; }
+  .nav-steps { display: flex; align-items: center; gap: 6px; }
+  .nav-step {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text-muted);
+    padding: 4px 10px; border-radius: var(--radius-pill);
+    transition: all .2s;
+  }
+  .nav-step.active { color: var(--text); background: white; border: 1px solid var(--border); }
+  .nav-step.done { color: var(--green-dark); }
+  .nav-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; opacity: .4;
+  }
+  .nav-step.active .nav-dot { background: var(--green); opacity: 1; }
+  .nav-step.done .nav-dot { background: var(--green); opacity: 1; }
+  .nav-sep { color: var(--border); font-size: 16px; }
+
+  /* PAGES */
+  .page { display: none; animation: fadeUp .35s ease both; }
+  .page.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* PAGE 1 */
+  .p1-hero {
+    max-width: 640px; margin: 0 auto;
+    padding: 4rem 2rem 2rem;
+    text-align: center;
+  }
+  .p1-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--green-light); color: var(--green-dark);
+    font-size: 12px; font-weight: 500;
+    padding: 5px 12px; border-radius: var(--radius-pill);
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--green-mid);
+  }
+  .p1-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 5vw, 48px);
+    line-height: 1.15; color: var(--text);
+    margin-bottom: 1rem;
+  }
+  .p1-hero h1 em { color: var(--green); font-style: normal; }
+  .p1-hero p {
+    font-size: 16px; color: var(--text-muted);
+    line-height: 1.7; max-width: 480px; margin: 0 auto;
+  }
+
+  .p1-form {
+    max-width: 640px; margin: 0 auto;
+    padding: 0 2rem 4rem;
+    display: flex; flex-direction: column; gap: 1.5rem;
+  }
+
+  .field-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    transition: border-color .2s;
+  }
+  .field-card:focus-within { border-color: var(--green-mid); }
+  .field-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .field-card textarea {
+    width: 100%; border: none; outline: none; resize: none;
+    font-family: 'DM Sans', sans-serif; font-size: 15px;
+    color: var(--text); background: transparent; line-height: 1.7;
+    min-height: 100px;
+  }
+  .field-card textarea::placeholder { color: var(--text-hint); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    padding: 6px 14px; border-radius: var(--radius-pill);
+    border: 1px solid var(--border);
+    font-size: 13px; cursor: pointer; user-select: none;
+    color: var(--text-muted); background: var(--bg);
+    transition: all .15s; font-family: 'DM Sans', sans-serif;
+  }
+  .chip:hover { background: white; color: var(--text); border-color: rgba(0,0,0,0.2); }
+  .chip.sel { background: var(--green); border-color: var(--green); color: white; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 500px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .field-plain { display: flex; flex-direction: column; gap: 8px; }
+
+  .cta-row { display: flex; justify-content: center; margin-top: .5rem; }
+  .btn-main {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--green); color: white;
+    border: none; border-radius: var(--radius);
+    padding: 14px 28px; font-size: 15px; font-weight: 500;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all .18s; letter-spacing: .01em;
+  }
+  .btn-main:hover { background: var(--green-dark); transform: translateY(-1px); }
+  .btn-main:active { transform: translateY(0); }
+  .btn-main svg { width: 16px; height: 16px; transition: transform .2s; }
+  .btn-main:hover svg { transform: translateX(3px); }
+
+  .err-msg {
+    font-size: 13px; color: #b91c1c;
+    background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: var(--radius-sm); padding: 10px 14px;
+    display: none;
+  }
+
+  /* PAGE 2 */
+  .p2-wrap { max-width: 720px; margin: 0 auto; padding: 3rem 2rem 4rem; }
+
+  .p2-head { margin-bottom: 2rem; }
+  .p2-head h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px; margin-bottom: 6px;
+  }
+  .p2-meta {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;
+  }
+  .meta-pill {
+    font-size: 12px; padding: 4px 10px; border-radius: var(--radius-pill);
+    background: var(--green-light); color: var(--green-dark);
+    border: 1px solid var(--green-mid); font-weight: 500;
+  }
+
+  .logline {
+    font-size: 15px; color: var(--text-muted); font-style: italic;
+    padding: 12px 16px; border-left: 3px solid var(--green-mid);
+    background: var(--surface); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin-bottom: 2rem; line-height: 1.7;
+  }
+
+  .overview-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px; margin-bottom: 2rem;
+  }
+  .o-card {
+    background: var(--surface); border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+  }
+  .o-label { font-size: 11px; color: var(--text-hint); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+  .o-val { font-size: 15px; font-weight: 500; color: var(--text); }
+
+  .scenes { display: flex; flex-direction: column; gap: 12px; }
+  .scene {
+    background: var(--surface); border: 1px solid var(--border-light);
+    border-radius: var(--radius); overflow: hidden;
+    transition: border-color .2s;
+  }
+  .scene:hover { border-color: var(--green-mid); }
+  .scene-top { display: flex; gap: 0; }
+  .scene-num {
+    min-width: 52px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: var(--green-light); border-right: 1px solid var(--green-mid);
+    gap: 2px;
+  }
+  .scene-num span { font-size: 18px; font-weight: 600; color: var(--green-dark); }
+  .scene-num small { font-size: 10px; color: var(--green); letter-spacing: .05em; text-transform: uppercase; }
+  .scene-body { flex: 1; padding: 14px 16px; }
+  .scene-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+  .scene-desc { font-size: 13px; color: var(--text-muted); line-height: 1.65; }
+  .scene-visual { font-size: 12px; color: var(--text-hint); margin-top: 5px; }
+  .scene-dialogue {
+    font-size: 13px; color: var(--text-muted); font-style: italic;
+    padding: 8px 12px; border-left: 2px solid var(--green-mid);
+    margin-top: 8px; background: var(--bg); border-radius: 0 4px 4px 0;
+  }
+  .scene-footer {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 10px 16px; border-top: 1px solid var(--border-light);
+    background: var(--bg);
+  }
+  .stag {
+    font-size: 11px; padding: 3px 10px; border-radius: var(--radius-pill);
+    display: flex; align-items: center; gap: 4px;
+    border: 1px solid var(--border-light); color: var(--text-muted);
+    background: var(--surface);
+  }
+  .stag.green { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); }
+  .stag svg { width: 11px; height: 11px; }
+
+  .p2-actions {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 2rem; padding-top: 1.5rem;
+    border-top: 1px solid var(--border-light);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: white; color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 11px 20px;
+    font-size: 14px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all .15s;
+  }
+  .btn-ghost:hover { background: var(--bg); }
+  .coming-soon {
+    font-size: 12px; color: var(--text-hint);
+    background: var(--bg); border: 1px dashed var(--border);
+    border-radius: var(--radius-sm); padding: 8px 14px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <span>
+      <svg viewBox="0 0 16 16"><path d="M2 3h12v2H2zm0 4h8v2H2zm0 4h6v2H2z"/></svg>
+    </span>
+    StoryFrame
+  </div>
+  <div class="nav-steps">
+    <div class="nav-step active" id="ns1">
+      <div class="nav-dot"></div> Describe
+    </div>
+    <div class="nav-sep">›</div>
+    <div class="nav-step" id="ns2">
+      <div class="nav-dot"></div> Storyboard
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE 1 -->
+<div class="page active" id="page1">
+  <div class="p1-hero">
+    <div class="p1-badge">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.5l-3 2.9.7 4.1L8 10.4l-3.7 2.1.7-4.1L2 5.5l4.2-.9z"/></svg>
+      AI-powered storyboard generator
+    </div>
+    <h1>Turn your <em>idea</em> into a scene-by-scene plan</h1>
+    <p>Describe your video concept and get a full storyboard — camera angles, locations, mood, and more.</p>
+  </div>
+
+  <div class="p1-form">
+
+    <div class="field-card">
+      <div class="field-label">Your idea</div>
+      <textarea id="idea" placeholder="e.g. A 60-second brand video for a coffee startup targeting young professionals. Warm, intimate tone — showing the morning ritual, the first sip, the feeling of calm before a busy day. Ends with the logo and tagline 'Start well.'"></textarea>
+    </div>
+
+    <div class="field-card">
+      <div class="field-label">Genre</div>
+      <div class="chips" id="genreC">
+        <div class="chip" data-v="Documentary">Documentary</div>
+        <div class="chip" data-v="Drama">Drama</div>
+        <div class="chip" data-v="Comedy">Comedy</div>
+        <div class="chip" data-v="Action / Thriller">Action</div>
+        <div class="chip" data-v="Horror">Horror</div>
+        <div class="chip" data-v="Romance">Romance</div>
+        <div class="chip" data-v="Sci-Fi / Fantasy">Sci-Fi</div>
+        <div class="chip" data-v="Educational">Educational</div>
+        <div class="chip" data-v="Brand / Ad">Brand / Ad</div>
+        <div class="chip" data-v="Social Media Short">Social Media</div>
+        <div class="chip" data-v="Music Video">Music Video</div>
+        <div class="chip" data-v="Corporate">Corporate</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field-card">
+        <div class="field-label">Platform</div>
+        <div class="chips" id="platC">
+          <div class="chip" data-v="YouTube">YouTube</div>
+          <div class="chip" data-v="TikTok / Reels">TikTok / Reels</div>
+          <div class="chip" data-v="Cinema">Cinema</div>
+          <div class="chip" data-v="Corporate / Internal">Corporate</div>
+          <div class="chip" data-v="Any">Any</div>
+        </div>
+      </div>
+      <div class="field-card">
+        <div class="field-label">Number of scenes</div>
+        <div class="chips" id="scenesC">
+          <div class="chip" data-v="3">3 scenes</div>
+          <div class="chip sel" data-v="5">5 scenes</div>
+          <div class="chip" data-v="8">8 scenes</div>
+          <div class="chip" data-v="10">10 scenes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="err-msg" id="errMsg">Please describe your video idea before continuing.</div>
+
+    <div class="cta-row">
+      <button class="btn-main" onclick="goToPage2()">
+        Preview storyboard
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 8h10M9 4l4 4-4 4"/><path d="M3 8h10m-4-4 4 4-4 4" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page" id="page2">
+  <div class="p2-wrap">
+
+    <div class="p2-head">
+      <h2 id="p2Title">Your storyboard</h2>
+      <div class="p2-meta" id="p2Meta"></div>
+    </div>
+
+    <div class="logline" id="p2Logline"></div>
+
+    <div class="overview-grid" id="p2Overview"></div>
+
+    <div class="scenes" id="p2Scenes"></div>
+
+    <div class="p2-actions">
+      <button class="btn-ghost" onclick="goToPage1()">
+        ← Edit idea
+      </button>
+      <div class="coming-soon">✦ AI generation coming soon</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const st = { genre: null, platform: null, scenes: '5' };
+
+function setupChips(id, key) {
+  document.querySelectorAll('#' + id + ' .chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('#' + id + ' .chip').forEach(x => x.classList.remove('sel'));
+      c.classList.add('sel');
+      st[key] = c.dataset.v;
+    });
+  });
+}
+setupChips('genreC', 'genre');
+setupChips('platC', 'platform');
+setupChips('scenesC', 'scenes');
+
+function showPage(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page' + n).classList.add('active');
+  document.getElementById('ns1').className = 'nav-step' + (n === 1 ? ' active' : ' done');
+  document.getElementById('ns2').className = 'nav-step' + (n === 2 ? ' active' : '');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToPage1() { showPage(1); }
+
+function goToPage2() {
+  const idea = document.getElementById('idea').value.trim();
+  const err = document.getElementById('errMsg');
+  if (!idea) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+
+  buildPreview(idea);
+  showPage(2);
+}
+
+function buildPreview(idea) {
+  const numScenes = parseInt(st.scenes) || 5;
+  const title = idea.length > 50 ? idea.slice(0, 47) + '…' : idea;
+
+  document.getElementById('p2Title').textContent = 'Storyboard preview';
+
+  const meta = document.getElementById('p2Meta');
+  meta.innerHTML = '';
+  if (st.genre) meta.innerHTML += `<span class="meta-pill">${st.genre}</span>`;
+  if (st.platform) meta.innerHTML += `<span class="meta-pill">${st.platform}</span>`;
+  meta.innerHTML += `<span class="meta-pill">${numScenes} scenes</span>`;
+
+  document.getElementById('p2Logline').textContent = '"' + idea.slice(0, 160) + (idea.length > 160 ? '…' : '') + '"';
+
+  const overview = document.getElementById('p2Overview');
+  overview.innerHTML = [
+    ['Scenes', numScenes],
+    ['Genre', st.genre || 'Not set'],
+    ['Platform', st.platform || 'Not set'],
+    ['Status', 'Draft']
+  ].map(([l, v]) => `<div class="o-card"><div class="o-label">${l}</div><div class="o-val">${v}</div></div>`).join('');
+
+  const demoScenes = [
+    { title: 'Opening shot', desc: 'Establishing wide shot sets the mood and location. The viewer is introduced to the world of the video.', cam: 'Wide establishing shot', loc: 'Exterior / Open space', dur: '5–8 sec', mood: 'Cinematic' },
+    { title: 'Introduce subject', desc: 'Camera moves closer, focusing on the main subject or character. A sense of intimacy begins to build.', cam: 'Medium shot', loc: 'Primary location', dur: '6–10 sec', mood: 'Engaging' },
+    { title: 'Key moment', desc: 'The emotional or narrative peak of the video. This is the scene viewers will remember most.', cam: 'Close-up', loc: 'Primary location', dur: '8–12 sec', mood: 'Impactful' },
+    { title: 'Supporting detail', desc: 'A detail shot or b-roll that supports the main narrative and adds texture to the story.', cam: 'Insert / Detail shot', loc: 'Various', dur: '4–6 sec', mood: 'Atmospheric' },
+    { title: 'Call to action', desc: 'The video closes with a clear message, logo reveal, or call to action for the audience.', cam: 'Slow push-in', loc: 'Neutral / Studio', dur: '5–8 sec', mood: 'Resolving' },
+    { title: 'Transition sequence', desc: 'A quick montage or transition linking the narrative threads together with visual rhythm.', cam: 'Handheld tracking', loc: 'Multiple', dur: '4–6 sec', mood: 'Dynamic' },
+    { title: 'Character beat', desc: 'A quiet moment that reveals something about the subject — a glance, a gesture, a pause.', cam: 'Over-the-shoulder', loc: 'Interior', dur: '6–8 sec', mood: 'Intimate' },
+    { title: 'Final reveal', desc: 'The climactic reveal or resolution of the story. Everything comes together in this scene.', cam: 'Crane / Pull-back', loc: 'Primary location', dur: '8–15 sec', mood: 'Climactic' },
+    { title: 'Reaction shot', desc: 'The audience sees the emotional response — a face, a moment of recognition or delight.', cam: 'Close-up reaction', loc: 'Interior', dur: '3–5 sec', mood: 'Warm' },
+    { title: 'End card', desc: 'Logo, tagline, and any final text or CTA are displayed clearly as the video concludes.', cam: 'Static / Locked off', loc: 'Studio', dur: '4–6 sec', mood: 'Branded' },
+  ];
+
+  const icons = {
+    cam: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="10" height="8" rx="1.5"/><path d="M11 6.5l4-2v7l-4-2V6.5z"/></svg>`,
+    loc: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6c0 3.5 4.5 8.5 4.5 8.5s4.5-5 4.5-8.5c0-2.5-2-4.5-4.5-4.5z"/><circle cx="8" cy="6" r="1.5"/></svg>`,
+    time: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>`
+  };
+
+  const scenesEl = document.getElementById('p2Scenes');
+  scenesEl.innerHTML = '';
+  for (let i = 0; i < numScenes; i++) {
+    const s = demoScenes[i % demoScenes.length];
+    const el = document.createElement('div');
+    el.className = 'scene';
+    el.innerHTML = `
+      <div class="scene-top">
+        <div class="scene-num">
+          <span>${i + 1}</span>
+          <small>scene</small>
+        </div>
+        <div class="scene-body">
+          <div class="scene-title">${s.title}</div>
+          <div class="scene-desc">${s.desc}</div>
+        </div>
+      </div>
+      <div class="scene-footer">
+        <span class="stag green">${icons.cam}${s.cam}</span>
+        <span class="stag">${icons.loc}${s.loc}</span>
+        <span class="stag">${icons.time}${s.dur}</span>
+        <span class="stag">${s.mood}</span>
+      </div>`;
+    scenesEl.appendChild(el);
+  }
+}
+</script>
+</body>
+</html>
