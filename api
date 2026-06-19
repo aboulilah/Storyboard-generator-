@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { idea, genre, platform, scenes } = req.body;
+    const { idea, genre, platform } = req.body;
 
     if (!idea) {
       return res.status(400).json({ error: "No idea provided" });
@@ -16,28 +16,27 @@ export default async function handler(req, res) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const prompt = `
-    Idea: ${idea}
-    Genre: ${genre || "Any"}
-    Platform: ${platform || "Any"}
-    Scenes: ${scenes || 5}
-
-    Generate a simple list of content ideas (NOT storyboard).
-    Give 5 short ideas, each 1-2 lines.
-    `;
-
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
+      messages: [{
+        role: "user",
+        content: `Give 5 content ideas for:
+        Idea: ${idea}
+        Genre: ${genre}
+        Platform: ${platform}`
+      }],
     });
 
     return res.status(200).json({
-      result: response.choices[0].message.content,
+      result: response.choices[0].message.content || ""
     });
 
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "API failed" });
+    console.error("API ERROR:", err);
+
+    return res.status(500).json({
+      error: "Server error",
+      details: err.message
+    });
   }
 }
-
