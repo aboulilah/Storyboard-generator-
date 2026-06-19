@@ -1,41 +1,196 @@
-import OpenAI from "openai";
+<!DOCTYPE html>
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Content Idea Generator</title>
+
+<style>
+:root {
+  --green: #16a34a;
+  --white: #ffffff;
+  --text: #111;
+  --muted: #666;
+  --border: #e5e5e5;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: var(--white);
+  color: var(--text);
+  margin: 0;
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 2rem;
+}
+
+h1 {
+  text-align: center;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.select-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+select {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+.card {
+  border: 1px solid var(--border);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- PAGE 1 -->
+
+  <div id="page1" class="page active">
+    <h1>Content Idea Generator</h1>
+
+```
+<textarea id="idea" placeholder="Describe your idea..."></textarea>
+
+<div class="select-group">
+  <select id="genre">
+    <option value="">Select Genre</option>
+    <option>Education</option>
+    <option>Entertainment</option>
+    <option>Motivation</option>
+  </select>
+
+  <select id="platform">
+    <option value="">Select Platform</option>
+    <option>TikTok</option>
+    <option>Instagram</option>
+    <option>YouTube</option>
+  </select>
+</div>
+
+<button onclick="goToPage2()">Generate Ideas</button>
+```
+
+  </div>
+
+  <!-- PAGE 2 -->
+
+  <div id="page2" class="page">
+    <h1 id="title">Generating...</h1>
+
+```
+<div id="results"></div>
+
+<button onclick="goBack()">← Back</button>
+```
+
+  </div>
+
+</div>
+
+<script>
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBack() {
+  showPage('page1');
+}
+
+async function goToPage2() {
+  const idea = document.getElementById('idea').value.trim();
+  const genre = document.getElementById('genre').value;
+  const platform = document.getElementById('platform').value;
+
+  if (!idea) {
+    alert("Please enter an idea");
+    return;
   }
+
+  showPage('page2');
+  document.getElementById('title').innerText = "Generating...";
+  document.getElementById('results').innerHTML = "";
 
   try {
-    const { idea, genre, platform, scenes } = req.body;
-
-    if (!idea) {
-      return res.status(400).json({ error: "No idea provided" });
-    }
-
-    const client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idea, genre, platform })
     });
 
-    const prompt = `
-    Idea: ${idea}
-    Genre: ${genre || "Any"}
-    Platform: ${platform || "Any"}
+    const data = await res.json();
 
-    Generate 5 creative content ideas.
-    Keep them short and viral-style.
-    `;
+    if (!res.ok) throw new Error(data.error);
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    res.status(200).json({
-      result: response.choices[0].message.content,
-    });
+    displayResults(data.result);
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "API failed" });
+    document.getElementById('title').innerText = "Error";
+    document.getElementById('results').innerHTML = `<p>${err.message}</p>`;
   }
 }
+
+function displayResults(text) {
+  document.getElementById('title').innerText = "Your Ideas";
+
+  const lines = text.split('\n').filter(l => l.trim() !== '');
+  const container = document.getElementById('results');
+
+  lines.forEach((line, i) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `<strong>Idea ${i+1}</strong><br>${line}`;
+    container.appendChild(div);
+  });
+}
+</script>
+
+</body>
+</html>
